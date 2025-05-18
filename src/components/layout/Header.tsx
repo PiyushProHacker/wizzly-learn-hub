@@ -1,15 +1,22 @@
 
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Button } from "@/components/ui/button";
-import { sampleUser } from "@/data/sampleData";
 import { LogOut } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { toast } from "sonner";
 
 export function Header() {
-  const { user } = sampleUser;
+  const { user, signOut } = useAuth();
   
-  const handleSignOut = () => {
-    console.log("Sign out clicked");
-    // In real app, this would call supabase.auth.signOut()
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast.success("Signed out successfully");
+    } catch (error) {
+      console.error("Error signing out:", error);
+      toast.error("Failed to sign out");
+    }
   };
 
   return (
@@ -42,27 +49,30 @@ export function Header() {
         <div className="ml-auto flex items-center gap-2">
           <ThemeToggle />
           
-          <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full overflow-hidden border border-border">
-                <img
-                  src={user.avatar_url}
-                  alt={user.name}
-                  className="h-full w-full object-cover"
-                />
+          {user && (
+            <div className="flex items-center gap-4">
+              <div className="hidden md:flex items-center gap-2">
+                <Avatar className="h-8 w-8 border border-border">
+                  <AvatarImage src={user.user_metadata?.avatar_url} />
+                  <AvatarFallback>
+                    {user.email ? user.email.substring(0, 2).toUpperCase() : "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-sm font-medium">
+                  {user.user_metadata?.name || user.email?.split("@")[0]}
+                </span>
               </div>
-              <span className="text-sm font-medium">{user.name}</span>
+              
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={handleSignOut}
+                aria-label="Sign out"
+              >
+                <LogOut className="h-5 w-5" />
+              </Button>
             </div>
-            
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={handleSignOut}
-              aria-label="Sign out"
-            >
-              <LogOut className="h-5 w-5" />
-            </Button>
-          </div>
+          )}
         </div>
       </div>
     </header>
