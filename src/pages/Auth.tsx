@@ -17,42 +17,86 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
-const formSchema = z.object({
+const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email" }),
   password: z
     .string()
     .min(6, { message: "Password must be at least 6 characters" }),
 });
 
-type FormValues = z.infer<typeof formSchema>;
+const signupSchema = loginSchema;
+
+const resetPasswordSchema = z.object({
+  email: z.string().email({ message: "Please enter a valid email" }),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
+type SignupFormValues = z.infer<typeof signupSchema>;
+type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
 const Auth = () => {
-  const [isLogin, setIsLogin] = useState(true);
-  const { user, signIn, signUp } = useAuth();
+  const [authMode, setAuthMode] = useState<"login" | "signup" | "reset">("login");
+  const { user, signIn, signUp, resetPassword } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+  const loginForm = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
     defaultValues: {
       email: "",
       password: "",
     },
   });
 
-  const onSubmit = async (data: FormValues) => {
+  const signupForm = useForm<SignupFormValues>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  const resetForm = useForm<ResetPasswordFormValues>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+
+  const handleLogin = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
-      if (isLogin) {
-        const { error } = await signIn(data.email, data.password);
-        if (error) throw error;
-        toast.success("Signed in successfully!");
-        navigate("/");
-      } else {
-        const { error } = await signUp(data.email, data.password);
-        if (error) throw error;
-        toast.success("Account created! Please check your email for verification.");
-      }
+      const { error } = await signIn(data.email, data.password);
+      if (error) throw error;
+      toast.success("Signed in successfully!");
+      navigate("/");
+    } catch (error: any) {
+      toast.error(error.message || "An error occurred");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignup = async (data: SignupFormValues) => {
+    setIsLoading(true);
+    try {
+      const { error } = await signUp(data.email, data.password);
+      if (error) throw error;
+      toast.success("Account created! Please check your email for verification.");
+    } catch (error: any) {
+      toast.error(error.message || "An error occurred");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (data: ResetPasswordFormValues) => {
+    setIsLoading(true);
+    try {
+      const { error } = await resetPassword(data.email);
+      if (error) throw error;
+      toast.success("Password reset email sent. Please check your inbox.");
+      setAuthMode("login");
     } catch (error: any) {
       toast.error(error.message || "An error occurred");
     } finally {
@@ -89,105 +133,260 @@ const Auth = () => {
 
         <div className="text-center">
           <h1 className="text-3xl font-bold">
-            {isLogin ? "Sign In to Wizzly" : "Create a Wizzly Account"}
+            {authMode === "login" 
+              ? "Sign In to Wizzly" 
+              : authMode === "signup" 
+                ? "Create a Wizzly Account" 
+                : "Reset Your Password"}
           </h1>
           <p className="mt-2 text-muted-foreground">
-            {isLogin
+            {authMode === "login"
               ? "Welcome back! Sign in to access your dashboard"
-              : "Join Wizzly to enhance your learning experience"}
+              : authMode === "signup"
+                ? "Join Wizzly to enhance your learning experience"
+                : "Enter your email to receive a password reset link"}
           </p>
         </div>
 
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-6"
-          >
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="your.email@example.com"
-                      type="email"
-                      {...field}
-                      disabled={isLoading}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="••••••••"
-                      type="password"
-                      {...field}
-                      disabled={isLoading}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading}
+        {authMode === "login" && (
+          <Form {...loginForm}>
+            <form
+              onSubmit={loginForm.handleSubmit(handleLogin)}
+              className="space-y-6"
             >
-              {isLoading ? (
-                <span className="flex items-center">
-                  <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  {isLogin ? "Signing in..." : "Creating account..."}
-                </span>
-              ) : isLogin ? (
-                "Sign in"
-              ) : (
-                "Create account"
-              )}
-            </Button>
-          </form>
-        </Form>
+              <FormField
+                control={loginForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="your.email@example.com"
+                        type="email"
+                        {...field}
+                        disabled={isLoading}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={loginForm.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="••••••••"
+                        type="password"
+                        {...field}
+                        disabled={isLoading}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <span className="flex items-center">
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Signing in...
+                  </span>
+                ) : "Sign in"}
+              </Button>
+              
+              <div className="text-center pt-2">
+                <button
+                  type="button"
+                  onClick={() => setAuthMode("reset")}
+                  className="text-sm text-primary hover:underline focus:outline-none"
+                >
+                  Forgot password?
+                </button>
+              </div>
+            </form>
+          </Form>
+        )}
+
+        {authMode === "signup" && (
+          <Form {...signupForm}>
+            <form
+              onSubmit={signupForm.handleSubmit(handleSignup)}
+              className="space-y-6"
+            >
+              <FormField
+                control={signupForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="your.email@example.com"
+                        type="email"
+                        {...field}
+                        disabled={isLoading}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={signupForm.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="••••••••"
+                        type="password"
+                        {...field}
+                        disabled={isLoading}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <span className="flex items-center">
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Creating account...
+                  </span>
+                ) : "Create account"}
+              </Button>
+            </form>
+          </Form>
+        )}
+
+        {authMode === "reset" && (
+          <Form {...resetForm}>
+            <form
+              onSubmit={resetForm.handleSubmit(handleResetPassword)}
+              className="space-y-6"
+            >
+              <FormField
+                control={resetForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="your.email@example.com"
+                        type="email"
+                        {...field}
+                        disabled={isLoading}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <span className="flex items-center">
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Sending reset link...
+                  </span>
+                ) : "Send reset link"}
+              </Button>
+            </form>
+          </Form>
+        )}
 
         <div className="text-center">
           <button
             type="button"
-            onClick={() => setIsLogin(!isLogin)}
+            onClick={() => setAuthMode(authMode === "login" ? "signup" : "login")}
             className="text-sm text-primary hover:underline focus:outline-none"
           >
-            {isLogin
+            {authMode === "login"
               ? "Don't have an account? Sign up"
-              : "Already have an account? Sign in"}
+              : authMode === "signup" 
+                ? "Already have an account? Sign in" 
+                : "Back to sign in"}
           </button>
         </div>
       </div>

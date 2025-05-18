@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Calendar, Home, BookOpen, Video, MessageSquare, LayoutDashboard, Clock, Settings } from "lucide-react";
 import { NavItem } from "@/types";
@@ -61,6 +61,46 @@ export function Sidebar() {
       element.scrollIntoView({ behavior: "smooth" });
     }
   };
+  
+  // Handle scroll to update the active section
+  useEffect(() => {
+    const handleScroll = () => {
+      // Get all section elements
+      const sections = navItems.map(item => {
+        const id = item.href.replace('#', '');
+        const element = document.getElementById(id);
+        if (!element) return null;
+        
+        const rect = element.getBoundingClientRect();
+        return { 
+          id, 
+          top: rect.top,
+          bottom: rect.bottom
+        };
+      }).filter(Boolean) as { id: string; top: number; bottom: number }[];
+      
+      // Find the section that is currently in view
+      // We consider a section in view if its top is above the middle of the viewport
+      const viewportHeight = window.innerHeight;
+      const viewportMiddle = viewportHeight * 0.4; // 40% from the top
+      
+      for (const section of sections) {
+        // If section top is above middle and bottom is below top of viewport
+        if (section.top <= viewportMiddle && section.bottom > 0) {
+          setActiveSection(section.id);
+          break;
+        }
+      }
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    // Initial check on mount
+    handleScroll();
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
   
   return (
     <div className="hidden md:flex h-screen flex-col bg-sidebar border-r border-sidebar-border fixed left-0 top-0 z-30 w-64 pb-4 pt-16">

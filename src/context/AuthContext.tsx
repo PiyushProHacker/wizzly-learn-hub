@@ -13,7 +13,17 @@ type AuthContextType = {
   signUp: (email: string, password: string) => Promise<{
     error: Error | null;
   }>;
+  resetPassword: (email: string) => Promise<{
+    error: Error | null;
+  }>;
   signOut: () => Promise<void>;
+  updateProfile: (data: {
+    username?: string;
+    avatar_url?: string;
+  }) => Promise<{
+    error: Error | null;
+    data: any | null;
+  }>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -59,8 +69,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error };
   };
 
+  const resetPassword = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/auth',
+    });
+    return { error };
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
+  };
+
+  const updateProfile = async (data: { username?: string; avatar_url?: string }) => {
+    if (!user) {
+      return { error: new Error('User not authenticated'), data: null };
+    }
+    
+    const { error, data: updatedProfile } = await supabase
+      .from('profiles')
+      .update(data)
+      .eq('id', user.id)
+      .select()
+      .single();
+      
+    return { error, data: updatedProfile };
   };
 
   const value = {
@@ -69,7 +101,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isLoading,
     signIn,
     signUp,
-    signOut
+    resetPassword,
+    signOut,
+    updateProfile
   };
 
   return (

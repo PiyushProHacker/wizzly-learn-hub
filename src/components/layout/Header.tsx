@@ -1,10 +1,18 @@
 
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, Settings } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 
 export function Header() {
   const { user, signOut } = useAuth();
@@ -52,15 +60,42 @@ export function Header() {
           {user && (
             <div className="flex items-center gap-4">
               <div className="hidden md:flex items-center gap-2">
-                <Avatar className="h-8 w-8 border border-border">
-                  <AvatarImage src={user.user_metadata?.avatar_url} />
-                  <AvatarFallback>
-                    {user.email ? user.email.substring(0, 2).toUpperCase() : "U"}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-sm font-medium">
-                  {user.user_metadata?.name || user.email?.split("@")[0]}
-                </span>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative p-0 h-8 w-8 rounded-full">
+                      <Avatar className="h-8 w-8 border border-border">
+                        <AvatarImage src={user.user_metadata?.avatar_url} />
+                        <AvatarFallback>
+                          {user.email ? user.email.substring(0, 2).toUpperCase() : "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <div className="flex items-center justify-start gap-2 p-2">
+                      <div className="flex flex-col space-y-1 leading-none">
+                        <p className="font-medium">
+                          {user.user_metadata?.username || user.email?.split("@")[0]}
+                        </p>
+                        <p className="w-[200px] truncate text-sm text-muted-foreground">
+                          {user.email}
+                        </p>
+                      </div>
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/profile" className="cursor-pointer flex w-full items-center">
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>Profile Settings</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Sign Out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
               
               <Button 
@@ -68,6 +103,7 @@ export function Header() {
                 size="icon" 
                 onClick={handleSignOut}
                 aria-label="Sign out"
+                className="md:hidden"
               >
                 <LogOut className="h-5 w-5" />
               </Button>
