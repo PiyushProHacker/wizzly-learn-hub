@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import ProfileSettings from "./pages/ProfileSettings";
+import VideoDetail from "./pages/VideoDetail";
 import { AuthProvider } from "@/context/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
@@ -30,6 +31,11 @@ const App = () => (
             <Route path="/profile" element={
               <ProtectedRoute>
                 <ProfileSettings />
+              </ProtectedRoute>
+            } />
+            <Route path="/video/:id" element={
+              <ProtectedRoute>
+                <VideoDetail />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

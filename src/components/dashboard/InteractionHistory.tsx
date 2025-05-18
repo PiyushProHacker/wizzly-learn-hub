@@ -1,9 +1,11 @@
 
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { sampleVideoInteractions } from "@/data/sampleData";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Calendar } from "lucide-react";
+import { Search, Calendar, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 
 export function InteractionHistory() {
@@ -86,7 +88,7 @@ export function InteractionHistory() {
                   </div>
                   
                   <div className="space-y-2">
-                    {interaction.questions.map((q, i) => (
+                    {interaction.questions.slice(0, 2).map((q, i) => (
                       <div key={i} className="space-y-1">
                         <p className="text-sm font-medium">
                           <span className="text-primary">Q: </span>
@@ -94,10 +96,24 @@ export function InteractionHistory() {
                         </p>
                         <p className="text-sm text-muted-foreground pl-4">
                           <span className="font-medium text-foreground">A: </span>
-                          {q.answer}
+                          {q.answer.length > 150 ? `${q.answer.substring(0, 150)}...` : q.answer}
                         </p>
                       </div>
                     ))}
+                    
+                    {interaction.questions.length > 2 && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        +{interaction.questions.length - 2} more questions
+                      </p>
+                    )}
+                    
+                    <div className="pt-2">
+                      <Button asChild variant="ghost" size="sm" className="p-0 h-auto text-primary hover:text-primary/80">
+                        <Link to={`/video/${interaction.video_id}`}>
+                          View Full Details <ArrowRight className="h-3 w-3 ml-1" />
+                        </Link>
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>

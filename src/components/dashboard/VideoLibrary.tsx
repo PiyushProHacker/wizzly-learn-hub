@@ -1,10 +1,11 @@
 
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { sampleVideoInteractions } from "@/data/sampleData";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, List, Grid, ExternalLink } from "lucide-react";
+import { Search, List, Grid, ExternalLink, ArrowRight } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
 type ViewMode = "grid" | "list";
@@ -119,6 +120,13 @@ export function VideoLibrary() {
                   <p className="text-xs text-muted-foreground mt-1">
                     Notes: {video.notes.manual_note ? "Yes" : "No"}
                   </p>
+                  <div className="mt-3">
+                    <Button asChild variant="ghost" size="sm" className="p-0 h-auto text-xs text-primary hover:text-primary/80">
+                      <Link to={`/video/${video.video_id}`}>
+                        View Details <ArrowRight className="h-3 w-3 ml-1" />
+                      </Link>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -153,10 +161,15 @@ export function VideoLibrary() {
                     <span className="text-xs text-muted-foreground">
                       {format(parseISO(video.created_at), "PPP")}
                     </span>
-                    <div className="mt-auto flex gap-2 text-xs">
-                      <span className="bg-secondary px-2 py-1 rounded">
+                    <div className="mt-auto flex justify-between items-center">
+                      <span className="bg-secondary px-2 py-1 rounded text-xs">
                         {video.notes.manual_note ? "Has Notes" : "No Notes"}
                       </span>
+                      <Button asChild variant="ghost" size="sm" className="p-0 h-auto text-xs text-primary hover:text-primary/80">
+                        <Link to={`/video/${video.video_id}`}>
+                          View Details <ArrowRight className="h-3 w-3 ml-1" />
+                        </Link>
+                      </Button>
                     </div>
                   </div>
                 </div>

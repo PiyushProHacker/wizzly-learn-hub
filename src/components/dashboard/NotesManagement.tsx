@@ -1,10 +1,11 @@
 
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { sampleVideoInteractions } from "@/data/sampleData";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { BookOpen, ExternalLink, Edit, Save } from "lucide-react";
+import { BookOpen, ExternalLink, Edit, Save, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 
 export function NotesManagement() {
@@ -78,8 +79,13 @@ export function NotesManagement() {
                     <BookOpen className="h-3 w-3" />
                     <span>Transcript Note</span>
                   </div>
-                  <div className="bg-secondary/30 rounded-md p-2 text-sm">
-                    {video.notes.transcript_note}
+                  <div className="bg-secondary/30 rounded-md p-2 text-sm max-h-[80px] overflow-hidden relative">
+                    <div className="line-clamp-3">
+                      {video.notes.transcript_note}
+                    </div>
+                    {video.notes.transcript_note.length > 200 && (
+                      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-secondary/30 to-transparent h-6" />
+                    )}
                   </div>
                 </div>
                 
@@ -120,10 +126,29 @@ export function NotesManagement() {
                       className="min-h-[80px] text-sm"
                     />
                   ) : (
-                    <div className="bg-secondary/30 rounded-md p-2 text-sm min-h-[60px]">
-                      {noteData?.manualNote || <span className="text-muted-foreground italic">No notes yet</span>}
+                    <div className="bg-secondary/30 rounded-md p-2 text-sm min-h-[60px] max-h-[80px] overflow-hidden relative">
+                      {noteData?.manualNote ? (
+                        <>
+                          <div className="line-clamp-3">
+                            {noteData.manualNote}
+                          </div>
+                          {noteData.manualNote.length > 150 && (
+                            <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-secondary/30 to-transparent h-6" />
+                          )}
+                        </>
+                      ) : (
+                        <span className="text-muted-foreground italic">No notes yet</span>
+                      )}
                     </div>
                   )}
+                </div>
+                
+                <div className="pt-1">
+                  <Button asChild variant="ghost" size="sm" className="p-0 h-auto text-xs text-primary hover:text-primary/80">
+                    <Link to={`/video/${video.video_id}`}>
+                      View Full Details <ArrowRight className="h-3 w-3 ml-1" />
+                    </Link>
+                  </Button>
                 </div>
               </CardContent>
             </Card>
